@@ -1,0 +1,55 @@
+/////////// variables
+
+unsigned long TimerVel; //tiempo para calculo de velocidad
+unsigned long TiempoVelAnterior = 0;// correcto definir en el momento arranca motor
+unsigned long TimerAng; //tiempo para calculo de angulo
+unsigned int w=0; // rps  1/s
+unsigned long rad = 0;// angulo un spot
+int Vel = 50;// velocidad en pwm 
+unsigned int i = 0;
+bool flag = false;
+String cad;
+////////// pines
+const int PinReceptor = 1;// ojo definir pin foto transistor
+const int PinHall = 1;// ojo definir pin foto hall sensor
+
+//////////config
+void setup() {
+  Serial.begin(9600);
+  delay(30);
+  pinMode(PinReceptor, INPUT);
+  attachInterrupt(digitalPinToInterrupt(PinReceptor), LecturaReceptor, CHANGE);// interrupcion lectura fotrotransistor
+  attachInterrupt(digitalPinToInterrupt(PinHall), LecturaVel, CHANGE);// interrupcion lectura hall sensor
+
+}
+
+void loop() {
+  if (flag){
+  cad= String(i)+","+String(rad,3);
+  Serial.println(cad);
+  Agles();
+  
+  flag = false;
+  }
+}
+
+void LecturaReceptor() {
+  TimerAng = millis();
+  flag = true;
+}
+
+void LecturaVel() {
+  TimerVel = millis();
+  w = (2*PI)/(TimerVel-TiempoVelAnterior);
+  TiempoVelAnterior = TimerVel;
+  i = 0;
+}
+
+void ControlVel(){  
+  if (TimerVel-TiempoVelAnterior > 200) Vel++;
+  else if(TimerVel-TiempoVelAnterior < 200 ) Vel--;
+}
+
+void Agles(){
+  rad = w/(TimerAng-TimerVel);
+}
